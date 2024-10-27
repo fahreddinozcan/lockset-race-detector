@@ -149,20 +149,6 @@ public class RaceDetector {
         return races;
     }
 
-    private static void runAndWaitThreads(Thread... threads) {
-        for (Thread t: threads) {
-            t.start();
-        }
-
-        for (Thread t: threads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     private String formatLock(Lock lock) {
         return String.format("Lock[%s]", Integer.toHexString(System.identityHashCode(lock)));
     }
