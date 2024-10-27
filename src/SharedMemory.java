@@ -9,9 +9,8 @@ class SharedMemory {
         data.put(addr, value);
     }
 
-    public Integer read(int addr) {
-
+    public void read(int addr) {
         raceDetector.memoryAccess(addr, RaceDetector.AccessType.READ);
-        return data.get(addr);
+        data.get(addr);
     }
 }

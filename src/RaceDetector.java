@@ -6,44 +6,6 @@ import java.util.stream.Collectors;
 
 public class RaceDetector {
 
-    public static void main(String[] args ) {
-        SharedMemory sm = new SharedMemory();
-
-        Lock lock1 = new ReentrantLock();
-        Lock lock2 = new ReentrantLock();
-
-
-        // Thread 1 uses lock1 for all operations
-        Thread t1 = new Thread(() -> {
-            lock1.lock();
-            sm.raceDetector.lockAcquired(lock1);
-
-            sm.write(1, 100);
-            sm.read(1);
-
-            sm.raceDetector.lockReleased(lock1);
-            lock1.unlock();
-        });
-
-        // Thread 2 uses lock2 for all operations on the same memory address
-        Thread t2 = new Thread(() -> {
-            lock2.lock();
-            sm.raceDetector.lockAcquired(lock2);
-
-            sm.write(1, 200);
-            sm.read(1);
-
-            sm.raceDetector.lockReleased(lock2);
-            lock2.unlock();
-        });
-
-        runAndWaitThreads(t1, t2);
-
-        List<RaceReport> races = sm.raceDetector.checkRaces();
-        System.out.println("Found: " + races.size() +" race conditions.");
-        races.forEach(System.out::println);
-    }
-
     public enum State {
         VIRGIN,
         EXCLUSIVE,
@@ -118,13 +80,11 @@ public class RaceDetector {
                 if (threadID != firstThreadAccess.get(address)) {
                     states.put(address, State.SHARED);
                 }
-
                 break;
             case SHARED:
                 if (accessType == AccessType.WRITE) {
                     states.put(address, State.MODIFIED);
                 }
-
                 break;
             default:
                 break;
@@ -133,11 +93,7 @@ public class RaceDetector {
 
     private void updateCandidateLockset(int address) {
         Set<Lock> currentLocks = new HashSet<>(threadLocks.get());
-
-
         candidateLocksets.computeIfAbsent(address, k -> new HashSet<>(currentLocks));
-
-
         candidateLocksets.compute(address, (key, existingLockset) -> {
             if (existingLockset == null) {
                 return new HashSet<>(currentLocks);
@@ -147,12 +103,9 @@ public class RaceDetector {
                 return existingLockset;
             }
         });
-
-
-
     }
 
-    public Optional<RaceReport> memoryAccess(int address, AccessType accessType) {
+    public void memoryAccess(int address, AccessType accessType) {
         long threadID = Thread.currentThread().getId();
         detectorLock.lock();
 
@@ -166,12 +119,11 @@ public class RaceDetector {
             if (candidateLocksets.get(address) != null &&
                     candidateLocksets.get(address).isEmpty() &&
                     (states.get(address) == State.SHARED || states.get(address) == State.MODIFIED)) {
-                return Optional.of(generateRaceReport(address));
+                generateRaceReport(address);
             }
         } finally {
             detectorLock.unlock();
         }
-        return Optional.empty();
     };
 
     private RaceReport generateRaceReport(int address) {
@@ -213,12 +165,5 @@ public class RaceDetector {
 
     private String formatLock(Lock lock) {
         return String.format("Lock[%s]", Integer.toHexString(System.identityHashCode(lock)));
-    }
-
-    private String formatLockSet(Set<Lock> locks) {
-        if (locks == null || locks.isEmpty()) return "[]";
-        return locks.stream()
-                .map(this::formatLock)
-                .collect(Collectors.joining(", ", "[", "]"));
     }
 }
