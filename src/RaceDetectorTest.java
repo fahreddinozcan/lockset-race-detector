@@ -11,6 +11,20 @@ class RaceDetectorTest {
     private SharedMemory sm;
     private RaceDetector detector;
 
+    private static void runAndWaitThreads(Thread... threads) {
+        for (Thread t: threads) {
+            t.start();
+        }
+
+        for (Thread t: threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     @BeforeEach
     void setUp() {
         sm = new SharedMemory();
@@ -43,10 +57,8 @@ class RaceDetectorTest {
             commonLock.unlock();
         });
 
-        t1.start();
-        t2.start();
-        t1.join();
-        t2.join();
+
+        runAndWaitThreads(t1, t2);
 
         List<RaceReport> races = detector.checkRaces();
         System.out.println("Found: " + races.size()+ " race conditions.");
@@ -80,10 +92,7 @@ class RaceDetectorTest {
             lock2.unlock();
         });
 
-        t1.start();
-        t2.start();
-        t1.join();
-        t2.join();
+        runAndWaitThreads(t1, t2);
 
         List<RaceReport> races = detector.checkRaces();
         System.out.println("Found: " + races.size()+ " race conditions.");
@@ -131,10 +140,7 @@ class RaceDetectorTest {
             lock3.unlock();
         });
 
-        t1.start();
-        t2.start();
-        t1.join();
-        t2.join();
+        runAndWaitThreads(t1, t2);
 
         List<RaceReport> races = detector.checkRaces();
         System.out.println("Found: " + races.size()+ " race conditions.");
@@ -195,26 +201,15 @@ class RaceDetectorTest {
             sm.read(2);
         });
 
-        // Start all threads
-        t1.start();
-        t2.start();
-        t3.start();
+        runAndWaitThreads(t1, t2, t3);
 
-        // Wait for completion
-        t1.join();
-        t2.join();
-        t3.join();
-
-        // Check for race conditions
         List<RaceReport> races = detector.checkRaces();
         System.out.println("\nFound " + races.size() + " race conditions:");
-        races.forEach(race -> System.out.println("\n" + race));
 
-        // Verify race conditions were detected
+
         assertTrue(races.size() >= 2,
                 "Should detect at least 2 race conditions (one for each address)");
 
-        // Optional: More specific assertions about the races found
         boolean foundAddress1Race = false;
         boolean foundAddress2Race = false;
 
@@ -250,10 +245,7 @@ class RaceDetectorTest {
             lock2.unlock();
         });
 
-        t1.start();
-        t2.start();
-        t1.join();
-        t2.join();
+        runAndWaitThreads(t1, t2);
 
         List<RaceReport> races = detector.checkRaces();
         System.out.println("Found: " + races.size()+ " race conditions.");
