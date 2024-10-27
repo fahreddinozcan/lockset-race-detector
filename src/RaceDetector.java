@@ -64,7 +64,8 @@ public class RaceDetector {
         AccessEntry(long threadID, AccessType accessType, Set<Lock> heldLocks) {
             this.threadID  = threadID;
             this.accessType = accessType;
-            this.heldLocks = heldLocks;
+//            this.heldLocks = heldLocks;
+            this.heldLocks = new HashSet<>(heldLocks);
         }
 
 //        @Override
@@ -180,9 +181,17 @@ public class RaceDetector {
             updateState(address, threadID, accessType);
             updateCandidateLockset(address);
 
-            accessHistory.computeIfAbsent(address, k -> new ArrayList<>()).add(new AccessEntry(threadID, accessType, threadLocks.get()));
+//            accessHistory.computeIfAbsent(address, k -> new ArrayList<>()).add(new AccessEntry(threadID, accessType, threadLocks.get()));
+//
+//            if (candidateLocksets.get(address) != null && candidateLocksets.get(address).isEmpty() && (states.get(address) ==State.SHARED || states.get(address) == State.MODIFIED)){
+//                return Optional.of(generateRaceReport(address));
+//            }
+            AccessEntry entry = new AccessEntry(threadID, accessType, threadLocks.get());
+            accessHistory.computeIfAbsent(address, k -> new ArrayList<>()).add(entry);
 
-            if (candidateLocksets.get(address) != null && candidateLocksets.get(address).isEmpty() && (states.get(address) ==State.SHARED || states.get(address) == State.MODIFIED)){
+            if (candidateLocksets.get(address) != null &&
+                    candidateLocksets.get(address).isEmpty() &&
+                    (states.get(address) == State.SHARED || states.get(address) == State.MODIFIED)) {
                 return Optional.of(generateRaceReport(address));
             }
         } finally {
