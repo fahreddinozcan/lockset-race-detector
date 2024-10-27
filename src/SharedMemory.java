@@ -8,16 +8,6 @@ class SharedMemory {
     public final RaceDetector raceDetector = new RaceDetector();
 
     public void write(int addr, int value) {
-//        try {
-//            lock.lock();
-//            raceDetector.lockAcquired(lock);
-//            raceDetector.memoryAccess(addr, RaceDetector.AccessType.WRITE)
-//                    .ifPresent(System.out::println);
-//            data.put(addr, value);
-//        } finally {
-//            raceDetector.lockReleased(lock);
-//            lock.unlock();
-//        }
         raceDetector.memoryAccess(addr, RaceDetector.AccessType.WRITE);
         data.put(addr, value);
     }

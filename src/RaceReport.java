@@ -5,6 +5,10 @@ public class RaceReport {
     private final RaceDetector.State state;
     private final List<RaceDetector.AccessEntry> accessHistory;
 
+    public int getAddress() {
+        return address;
+    }
+
     public RaceReport(int address, RaceDetector.State state, List<RaceDetector.AccessEntry> accessHistory) {
         this.address = address;
         this.state = state;
