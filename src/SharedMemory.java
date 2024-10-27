@@ -8,28 +8,23 @@ class SharedMemory {
     public final RaceDetector raceDetector = new RaceDetector();
 
     public void write(int addr, int value) {
-        try {
-            lock.lock();
-            raceDetector.lockAcquired(lock);
-            raceDetector.memoryAccess(addr, "write")
-                    .ifPresent(System.out::println);
-            data.put(addr, value);
-        } finally {
-            raceDetector.lockReleased(lock);
-            lock.unlock();
-        }
+//        try {
+//            lock.lock();
+//            raceDetector.lockAcquired(lock);
+//            raceDetector.memoryAccess(addr, RaceDetector.AccessType.WRITE)
+//                    .ifPresent(System.out::println);
+//            data.put(addr, value);
+//        } finally {
+//            raceDetector.lockReleased(lock);
+//            lock.unlock();
+//        }
+        raceDetector.memoryAccess(addr, RaceDetector.AccessType.WRITE);
+        data.put(addr, value);
     }
 
     public Integer read(int addr) {
-        try {
-            lock.lock();
-            raceDetector.lockAcquired(lock);
-            raceDetector.memoryAccess(addr, "read")
-                    .ifPresent(System.out::println);
-            return data.get(addr);
-        } finally {
-            raceDetector.lockReleased(lock);
-            lock.unlock();
-        }
+
+        raceDetector.memoryAccess(addr, RaceDetector.AccessType.READ);
+        return data.get(addr);
     }
 }
