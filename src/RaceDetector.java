@@ -64,14 +64,10 @@ public class RaceDetector {
         AccessEntry(long threadID, AccessType accessType, Set<Lock> heldLocks) {
             this.threadID  = threadID;
             this.accessType = accessType;
-//            this.heldLocks = heldLocks;
             this.heldLocks = new HashSet<>(heldLocks);
         }
 
-//        @Override
-//        public String toString() {
-//            return String.format("Thread-%d: %s with locks %s", threadID, accessType, heldLocks);
-//        }
+
         @Override
         public String toString() {
             return String.format("Thread-%d: %s with locks %s",
@@ -102,42 +98,33 @@ public class RaceDetector {
 
     public void lockAcquired(Lock lock) {
         threadLocks.get().add(lock);
-/*        System.out.println("[RaceDetector] Thread-" + Thread.currentThread().getId() +
-                " acquired " + formatLock(lock));
-        System.out.println("[RaceDetector] Thread-" + Thread.currentThread().getId() +
-                " current locks: " + formatLockSet(threadLocks.get()));*/
+
     }
 
     public void lockReleased(Lock lock) {
         threadLocks.get().remove(lock);
-//        System.out.println("[RaceDetector] Thread-" + Thread.currentThread().getId() +
-//                " released " + formatLock(lock));
-//        System.out.println("[RaceDetector] Thread-" + Thread.currentThread().getId() +
-//                " remaining locks: " + formatLockSet(threadLocks.get()));
     }
 
     // I implemented the state diagram from here https://courses.cs.vt.edu/cs5204/fall05-gback/presentations/Linford-Eraser/Presentation%20-%20Adobe%20PDF/Eraser%20Presentation.pdf
     private void updateState(int address, long threadID, AccessType accessType) {
         State currentState = states.getOrDefault(address, State.VIRGIN);
-//        System.out.println("[RaceDetector] Address " + address + " current state: " + currentState);
 
         switch (currentState) {
             case VIRGIN:
                 states.put(address, State.EXCLUSIVE);
                 firstThreadAccess.put(address, threadID);
-//                System.out.println("[RaceDetector] Address " + address + " current state: " + states.get(address));
                 break;
             case EXCLUSIVE:
                 if (threadID != firstThreadAccess.get(address)) {
                     states.put(address, State.SHARED);
                 }
-//                System.out.println("[RaceDetector] Address " + address + " moved to SHARED state by Thread-" + threadID);
+
                 break;
             case SHARED:
                 if (accessType == AccessType.WRITE) {
                     states.put(address, State.MODIFIED);
                 }
-//                System.out.println("[RaceDetector] Address " + address + " moved to MODIFIED state by Thread-" + threadID + " (WRITE operation)");
+
                 break;
             default:
                 break;
@@ -146,29 +133,22 @@ public class RaceDetector {
 
     private void updateCandidateLockset(int address) {
         Set<Lock> currentLocks = new HashSet<>(threadLocks.get());
-//        System.out.println("[RaceDetector] Updating lockset for address " + address);
-//        System.out.println("[RaceDetector] Thread-" + Thread.currentThread().getId() +
-//                " current locks: " + formatLockSet(currentLocks));
+
 
         candidateLocksets.computeIfAbsent(address, k -> new HashSet<>(currentLocks));
 
-        Set<Lock> previousLockset = candidateLocksets.get(address);
-//        System.out.println("[RaceDetector] Previous lockset for address " + address +
-//                ": " + formatLockSet(previousLockset));
 
         candidateLocksets.compute(address, (key, existingLockset) -> {
             if (existingLockset == null) {
                 return new HashSet<>(currentLocks);
             }else {
-                // This is basicly the union, C(V) = C(V) ∩ candidateLockset
                 existingLockset.retainAll(currentLocks);
-//                System.out.println("[RaceDetector] Updated lockset for address " + address +
-//                        ": " + formatLockSet(existingLockset));
+
                 return existingLockset;
             }
         });
 
-//        System.out.println("THREAD"+Thread.currentThread().getId()+" | Candidate Lockset after: " + candidateLocksets.get(address));
+
 
     }
 
@@ -176,16 +156,10 @@ public class RaceDetector {
         long threadID = Thread.currentThread().getId();
         detectorLock.lock();
 
-//        System.out.println("Thread-" + threadID + " is accessing address " + address + " with " + accessType + " operation.");
         try {
             updateState(address, threadID, accessType);
             updateCandidateLockset(address);
 
-//            accessHistory.computeIfAbsent(address, k -> new ArrayList<>()).add(new AccessEntry(threadID, accessType, threadLocks.get()));
-//
-//            if (candidateLocksets.get(address) != null && candidateLocksets.get(address).isEmpty() && (states.get(address) ==State.SHARED || states.get(address) == State.MODIFIED)){
-//                return Optional.of(generateRaceReport(address));
-//            }
             AccessEntry entry = new AccessEntry(threadID, accessType, threadLocks.get());
             accessHistory.computeIfAbsent(address, k -> new ArrayList<>()).add(entry);
 
