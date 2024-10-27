@@ -18,11 +18,13 @@ public class RaceReport {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Race condition detected at address %d%n", address));
-        sb.append(String.format("Memory location state: %s%n", state));
-        sb.append("Access history:%n");
+        sb.append(String.format("---------ADDRESS: %d---------\n", address));
+        sb.append(String.format("Race condition detected at address %d\n", address));
+        sb.append(String.format("Memory location state: %s\n", state));
+        sb.append("Access history:\n");
         accessHistory.forEach(access ->
-                sb.append(String.format("  %s%n", access.toString())));
+                sb.append(String.format("  %s\n", access.toString())));
+        sb.append(String.format("---------%d---------\n", address));
         return sb.toString();
     }
 }

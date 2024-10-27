@@ -96,6 +96,7 @@ class RaceDetectorTest {
 
         List<RaceReport> races = detector.checkRaces();
         System.out.println("Found: " + races.size()+ " race conditions.");
+        races.forEach(System.out::println);
         assertFalse(races.isEmpty(), "Race condition should be detected when using different locks");
         assertEquals(1, races.size(), "Should detect exactly one race condition");
     }
